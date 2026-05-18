@@ -1,3 +1,5 @@
 # Space Invaders Game
 
-this is a little game I am writing to teach Ben how to program in Python
+this is a little game I wrote using `opencode`.
+
+![screenshot](screenshots/screenshot-1.png)
