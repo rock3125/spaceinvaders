@@ -93,44 +93,63 @@ window.addEventListener('keyup', (e) => {
   if (e.key === ' ') keys.Space = false;
 });
 
-// Mobile Controls
-const joystick = document.getElementById('joystick');
-const btnFire = document.getElementById('btn-fire');
+  // Mobile Controls
+  const joystick = document.getElementById('joystick');
+  const btnFire = document.getElementById('btn-fire');
 
-if (joystick && btnFire) {
-  const updateJoystick = (e) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = joystick.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const mid = rect.width / 2;
-    
-    if (x < mid) {
-      keys.Left = true;
-      keys.Right = false;
-    } else {
+  if (joystick && btnFire) {
+    const updateJoystick = (e) => {
+      // Allow for both mouse and touch events if needed, but primarily for touch
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const rect = joystick.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const mid = rect.width / 2;
+      
+      if (x < mid) {
+        keys.Left = true;
+        keys.Right = false;
+      } else {
+        keys.Left = false;
+        keys.Right = true;
+      }
+    };
+
+    // Touch events
+    joystick.addEventListener('touchstart', (e) => { e.preventDefault(); updateJoystick(e); }, { passive: false });
+    joystick.addEventListener('touchmove', (e) => { e.preventDefault(); updateJoystick(e); }, { passive: false });
+    joystick.addEventListener('touchend', (e) => {
+      e.preventDefault();
       keys.Left = false;
-      keys.Right = true;
-    }
-  };
+      keys.Right = false;
+    }, { passive: false });
 
-  joystick.addEventListener('touchstart', updateJoystick);
-  joystick.addEventListener('touchmove', updateJoystick);
-  joystick.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    keys.Left = false;
-    keys.Right = false;
-  });
+    // Mouse events as fallback for touch-screen laptops or for testing
+    joystick.addEventListener('mousedown', (e) => { updateJoystick(e); });
+    joystick.addEventListener('mousemove', (e) => { if(e.buttons === 1) updateJoystick(e); });
+    joystick.addEventListener('mouseup', () => { keys.Left = false; keys.Right = false; });
+    joystick.addEventListener('mouseleave', () => { keys.Left = false; keys.Right = false; });
 
-  btnFire.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    keys.Space = true;
-  });
-  btnFire.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    keys.Space = false;
-  });
-}
+    btnFire.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      keys.Space = true;
+      
+      // Also handle start/restart on fire button if in appropriate state
+      if (currentState === STATES.MENU || currentState === STATES.GAME_OVER) {
+        initAudio();
+        startGame();
+      }
+    }, { passive: false });
+    
+    btnFire.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      keys.Space = false;
+    }, { passive: false });
+
+    // Mouse events for fire button
+    btnFire.addEventListener('mousedown', () => { keys.Space = true; });
+    btnFire.addEventListener('mouseup', () => { keys.Space = false; });
+  }
+
 
 // Click to focus and start/restart the game
 window.addEventListener('click', () => {
